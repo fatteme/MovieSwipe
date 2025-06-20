@@ -29,7 +29,7 @@ app.get('/health', (_, res) => {
 
 const startServer = async () => {
   try {
-    await connectDB();
+    // await connectDB();
     
     app.listen(PORT, () => {
       console.log(`🚀 MovieSwipe Backend running on port ${PORT}`);
