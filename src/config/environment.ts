@@ -12,6 +12,7 @@ interface EnvironmentConfig {
   JWT_EXPIRES_IN: string;
   API_PREFIX: string;
   CORS_ORIGIN: string;
+  GOOGLE_CLIENT_ID: string;
 }
 
 const getEnvVariable = (key: string): string => {
@@ -32,6 +33,7 @@ const config: EnvironmentConfig = {
   JWT_EXPIRES_IN: getEnvVariable('JWT_EXPIRES_IN'),
   API_PREFIX: getEnvVariable('API_PREFIX'),
   CORS_ORIGIN: getEnvVariable('CORS_ORIGIN'),
+  GOOGLE_CLIENT_ID: getEnvVariable('GOOGLE_CLIENT_ID'),
 };
 
 export default config;

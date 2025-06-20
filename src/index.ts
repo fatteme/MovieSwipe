@@ -4,6 +4,7 @@ import helmet from 'helmet';
 import morgan from 'morgan';
 import compression from 'compression';
 import config from './config/environment';
+import authRoutes from './routes/auth';
 
 const app = express();
 const PORT = config.PORT;
@@ -17,6 +18,9 @@ app.use(compression());
 app.use(morgan('combined'));
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
+
+// Routes
+app.use('/auth', authRoutes);
 
 app.get('/health', (_, res) => {
   res.status(200).json({ 
