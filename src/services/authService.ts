@@ -12,6 +12,11 @@ export interface GoogleUserInfo {
 
 export interface AuthResult {
   user: IUser;
+  token: string;  
+  refreshToken: string;
+}
+
+export interface RefreshTokenResult {
   token: string;
 }
 
@@ -49,7 +54,6 @@ export class AuthService {
     }
   }
 
-
   private async findOrCreateUser(googleUserInfo: GoogleUserInfo): Promise<IUser> {
     try {
       let user = await User.findOne({ googleId: googleUserInfo.googleId });
@@ -85,17 +89,13 @@ export class AuthService {
     }
   }
 
-
-  private generateJWTToken(user: IUser): string {
-    const payload = {
-      userId: user._id,
-      email: user.email,
-      googleId: user.googleId
-    };
-
-    return jwt.sign(payload, config.JWT_SECRET);
+  private generateAccessToken(user: IUser): string {
+    return jwt.sign(user, config.ACCESS_TOKEN_SECRET);
   }
 
+  private generateRefreshToken(user: IUser): string {
+    return jwt.sign(user, config.REFRESH_TOKEN_SECRET);
+  }
 
   async authenticateWithGoogle(googleToken: string): Promise<AuthResult> {
     try {
@@ -103,12 +103,28 @@ export class AuthService {
 
       const user = await this.findOrCreateUser(googleUserInfo);
 
-      const token = this.generateJWTToken(user);
+      const token = this.generateAccessToken(user);
+      const refreshToken = this.generateRefreshToken(user);
 
-      return { user, token };
+      return { user, token, refreshToken };
     } catch (error) {
       logger.error('Authentication failed:', error);
       throw error;
+    }
+  }
+
+  async refreshAccessToken(refreshToken: string): Promise<RefreshTokenResult> {
+    try {
+      const payload = jwt.verify(refreshToken, config.REFRESH_TOKEN_SECRET) as IUser;
+
+      const user = await User.findById(payload.googleId);
+      if (!user) throw new Error('User not found');
+
+      const token = this.generateAccessToken(user);
+
+      return { token };
+    } catch (error) {
+      throw new Error('Invalid or expired refresh token');
     }
   }
 }

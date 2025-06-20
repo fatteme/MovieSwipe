@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { googleAuth } from '../controllers/authController';
+import { googleAuth, refreshToken } from '../controllers/authController';
 
 const router = Router();
 
@@ -8,5 +8,11 @@ const router = Router();
  * @desc    Authenticate user with Google ID token
  */
 router.post('/', googleAuth);
+
+/**
+ * @route   POST /auth/refresh
+ * @desc    Refresh JWT access token using a refresh token
+ */
+router.post('/refresh', refreshToken);
 
 export default router; 

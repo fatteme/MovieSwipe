@@ -8,7 +8,8 @@ interface EnvironmentConfig {
   PORT: number;
   MONGODB_URI: string;
   MONGODB_URI_TEST: string;
-  JWT_SECRET: string;
+  ACCESS_TOKEN_SECRET: string;
+  REFRESH_TOKEN_SECRET: string;
   GOOGLE_CLIENT_ID: string;
 }
 
@@ -26,7 +27,8 @@ const config: EnvironmentConfig = {
   PORT: parseInt(getEnvVariable('PORT')),
   MONGODB_URI: getEnvVariable('MONGODB_URI'),
   MONGODB_URI_TEST: getEnvVariable('MONGODB_URI_TEST'),
-  JWT_SECRET: getEnvVariable('JWT_SECRET'),
+  ACCESS_TOKEN_SECRET: getEnvVariable('ACCESS_TOKEN_SECRET'),
+  REFRESH_TOKEN_SECRET: getEnvVariable('REFRESH_TOKEN_SECRET'),
   GOOGLE_CLIENT_ID: getEnvVariable('GOOGLE_CLIENT_ID'),
 };
 
