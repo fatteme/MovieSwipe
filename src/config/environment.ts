@@ -1,4 +1,12 @@
 import dotenv from 'dotenv';
+import { existsSync } from 'fs';
+import { join } from 'path';
+
+// Check if .env file exists
+const envPath = join(process.cwd(), '.env');
+if (!existsSync(envPath)) {
+  throw new Error(`❌ .env file not found at ${envPath}. Please create a .env file based on env.example`);
+}
 
 // Load environment variables from .env file
 dotenv.config();
@@ -14,15 +22,24 @@ interface EnvironmentConfig {
   CORS_ORIGIN: string;
 }
 
-const config: EnvironmentConfig = {
-  NODE_ENV: process.env['NODE_ENV'] || 'development',
-  PORT: parseInt(process.env['PORT'] || '3000', 10),
-  MONGODB_URI: process.env['MONGODB_URI'] || 'mongodb://localhost:27017/movieswipe',
-  MONGODB_URI_TEST: process.env['MONGODB_URI_TEST'] || 'mongodb://localhost:27017/movieswipe_test',
-  JWT_SECRET: process.env['JWT_SECRET'] || 'your-super-secret-jwt-key-change-this-in-production',
-  JWT_EXPIRES_IN: process.env['JWT_EXPIRES_IN'] || '7d',
-  API_PREFIX: process.env['API_PREFIX'] || '/api/v1',
-  CORS_ORIGIN: process.env['CORS_ORIGIN'] || 'http://localhost:3000',
+const getEnvVariable = (key: string): string => {
+  const value = process.env[key];
+  if (!value) {
+    throw new Error(`Missing required environment variable: ${key}`);
+  }
+  return value;
 };
 
-export default config; 
+
+const config: EnvironmentConfig = {
+  NODE_ENV: getEnvVariable('NODE_ENV'),
+  PORT: parseInt(getEnvVariable('PORT')),
+  MONGODB_URI: getEnvVariable('MONGODB_URI'),
+  MONGODB_URI_TEST: getEnvVariable('MONGODB_URI_TEST'),
+  JWT_SECRET: getEnvVariable('JWT_SECRET'),
+  JWT_EXPIRES_IN: getEnvVariable('JWT_EXPIRES_IN'),
+  API_PREFIX: getEnvVariable('API_PREFIX'),
+  CORS_ORIGIN: getEnvVariable('CORS_ORIGIN'),
+};
+
+export default config;
