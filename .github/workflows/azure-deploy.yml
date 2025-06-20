@@ -33,6 +33,7 @@ jobs:
           port: ${{ secrets.PORT }}
           mongodb_uri: ${{ secrets.MONGODB_URI }}
           target: ${{ secrets.VM_TARGET_PATH }}
+          script: cp ~/home/${{ secrets.VM_USERNAME }}/.env ~/home/${{ secrets.VM_USERNAME }}/movieswipe/.env
 
       - name: Restart app via SSH
         uses: appleboy/ssh-action@v1.0.3
