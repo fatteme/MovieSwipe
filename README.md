@@ -9,13 +9,11 @@ src/
 ├── config/           # Configuration files
 ├── controllers/      # Route controllers
 ├── middleware/       # Express middleware
-├── models/          # Database models
+├── models/          # Database models and TypeScript types
 ├── routes/          # API routes
 ├── services/        # Business logic
-├── types/           # TypeScript type definitions
 ├── utils/           # Utility functions
 ├── test/            # Test setup and utilities
-├── app.ts           # Express app configuration
 └── index.ts         # Application entry point
 ```
 
