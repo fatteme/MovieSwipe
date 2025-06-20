@@ -9,6 +9,12 @@ export interface CreateGroupRequest extends AuthenticatedRequest {
    body: {}
 }
 
+export interface JoinGroupRequest extends AuthenticatedRequest {
+  body: {
+    invitationCode: string;
+  };
+}
+
 export interface GroupResponse {
   message: string;
   data?: IGroup | IPopulatedGroup | IPopulatedGroup[];
@@ -53,7 +59,6 @@ export const createGroup = async (req: CreateGroupRequest, res: Response<GroupRe
   }
 };
  
-
 export const getGroupById = async (req: AuthenticatedRequest, res: Response<GroupResponse>) => {
   try {
     const { groupId } = req.params;
@@ -99,7 +104,6 @@ export const getGroupById = async (req: AuthenticatedRequest, res: Response<Grou
   }
 }; 
 
-
 export const getUserGroups = async (req: AuthenticatedRequest, res: Response<GroupResponse>) => {
   try {
     const userId = req.user?._id;
@@ -123,12 +127,6 @@ export const getUserGroups = async (req: AuthenticatedRequest, res: Response<Gro
     });
   }
 };
-
-export interface JoinGroupRequest extends AuthenticatedRequest {
-  body: {
-    invitationCode: string;
-  };
-}
 
 export const joinGroup = async (req: JoinGroupRequest, res: Response<GroupResponse>) => {
   try {

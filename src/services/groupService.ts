@@ -88,25 +88,21 @@ export class GroupService {
 
   async joinGroup(invitationCode: string, userId: mongoose.Types.ObjectId): Promise<IPopulatedGroup> {
     try {
-      // Find group by invitation code
       const group = await Group.findOne({ invitationCode });
       if (!group) {
         throw new Error('Invalid invitation code');
       }
 
-      // Check if user is already a member
       if (group.members.includes(userId)) {
         throw new Error('User is already a member of this group');
       }
 
-      // Add user to group members
       group.members.push(userId);
       await group.save();
 
-      // Return populated group data
       const populatedGroup = await Group.findById(group._id)
         .populate<{ owner: IUser }>('owner', 'name email')
-        .populate<{ members: IUser[] }>('members', 'name email') as IPopulatedGroup | null;
+        .populate<{ members: IUser[] }>('members', 'name email');
       
       if (!populatedGroup) {
         throw new Error('Failed to retrieve updated group');
@@ -120,6 +116,5 @@ export class GroupService {
     }
   }
 }
-
 
 export const groupService = new GroupService(); 
