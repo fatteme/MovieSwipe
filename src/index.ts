@@ -3,7 +3,6 @@ import cors from 'cors';
 import helmet from 'helmet';
 import morgan from 'morgan';
 import compression from 'compression';
-import { connectDB } from '@config/database';
 import config from '@config/environment';
 
 const app = express();
