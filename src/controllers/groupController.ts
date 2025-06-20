@@ -123,3 +123,56 @@ export const getUserGroups = async (req: AuthenticatedRequest, res: Response<Gro
     });
   }
 };
+
+export interface JoinGroupRequest extends AuthenticatedRequest {
+  body: {
+    invitationCode: string;
+  };
+}
+
+export const joinGroup = async (req: JoinGroupRequest, res: Response<GroupResponse>) => {
+  try {
+    const userId = req.user?._id;
+    const { invitationCode } = req.body;
+
+    if (!userId) {
+      return res.status(401).json({
+        message: 'User not authenticated'
+      });
+    }
+
+    if (!invitationCode) {
+      return res.status(400).json({
+        message: 'Invitation code is required'
+      });
+    }
+
+    const group = await groupService.joinGroup(invitationCode, userId);
+
+    return res.status(200).json({
+      message: 'Successfully joined group',
+      data: group
+    });
+
+  } catch (error) {
+    logger.error('Join group error:', error);
+    
+    if (error instanceof Error) {
+      if (error.message === 'Invalid invitation code') {
+        return res.status(404).json({
+          message: 'Invalid invitation code'
+        });
+      }
+      
+      if (error.message === 'User is already a member of this group') {
+        return res.status(409).json({
+          message: 'You are already a member of this group'
+        });
+      }
+    }
+
+    return res.status(500).json({
+      message: 'Internal server error'
+    });
+  }
+};

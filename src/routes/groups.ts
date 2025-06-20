@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { createGroup, getGroupById, getUserGroups } from '../controllers/groupController';
+import { createGroup, getGroupById, getUserGroups, joinGroup } from '../controllers/groupController';
 
 const router = Router();
 
@@ -8,6 +8,12 @@ const router = Router();
  * @desc    Create a new group
  */
 router.post('/', createGroup);
+
+/**
+ * @route   POST /groups/join
+ * @desc    Join a group using invitation code
+ */
+router.post('/join', joinGroup);
 
 /**
  * @route   GET /groups/:groupId
@@ -20,7 +26,5 @@ router.get('/:groupId', getGroupById);
  * @desc    Get all user's groups
  */
 router.get('/', getUserGroups);
-
-
 
 export default router; 
