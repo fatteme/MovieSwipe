@@ -1,186 +1,172 @@
 {
-  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
-  "contentVersion": "1.0.0.0",
-  "parameters": {
-    "appName": {
-      "type": "string",
-      "defaultValue": "movieswipe-backend",
-      "metadata": {
-        "description": "Name of the App Service"
-      }
-    },
-    "location": {
-      "type": "string",
-      "defaultValue": "[resourceGroup().location]",
-      "metadata": {
-        "description": "Location for all resources"
-      }
-    },
-    "sku": {
-      "type": "string",
-      "defaultValue": "B1",
-      "metadata": {
-        "description": "SKU for App Service Plan"
-      }
-    },
-    "nodeVersion": {
-      "type": "string",
-      "defaultValue": "18-lts",
-      "metadata": {
-        "description": "Node.js version"
-      }
-    },
-    "cosmosDbName": {
-      "type": "string",
-      "defaultValue": "movieswipe-cosmos",
-      "metadata": {
-        "description": "Name of the Cosmos DB account"
-      }
-    },
-    "databaseName": {
-      "type": "string",
-      "defaultValue": "movieswipe-db",
-      "metadata": {
-        "description": "Name of the MongoDB database"
-      }
-    }
-  },
-  "variables": {
-    "appServicePlanName": "[concat(parameters('appName'), '-plan')]",
-    "webAppName": "[parameters('appName')]",
-    "applicationInsightsName": "[concat(parameters('appName'), '-ai')]",
-    "cosmosDbAccountName": "[parameters('cosmosDbName')]",
-    "databaseName": "[parameters('databaseName')]"
-  },
-  "resources": [
-    {
-      "type": "Microsoft.Web/serverfarms",
-      "apiVersion": "2021-02-01",
-      "name": "[variables('appServicePlanName')]",
-      "location": "[parameters('location')]",
-      "sku": {
-        "name": "[parameters('sku')]"
-      },
-      "kind": "linux",
-      "properties": {
-        "reserved": true
-      }
-    },
-    {
-      "type": "Microsoft.Insights/components",
-      "apiVersion": "2020-02-02",
-      "name": "[variables('applicationInsightsName')]",
-      "location": "[parameters('location')]",
-      "kind": "web",
-      "properties": {
-        "Application_Type": "web",
-        "Request_Source": "rest"
-      }
-    },
-    {
-      "type": "Microsoft.DocumentDB/databaseAccounts",
-      "apiVersion": "2021-10-15",
-      "name": "[variables('cosmosDbAccountName')]",
-      "location": "[parameters('location')]",
-      "kind": "MongoDB",
-      "properties": {
-        "databaseAccountOfferType": "Standard",
-        "locations": [
-          {
-            "locationName": "[parameters('location')]",
-            "failoverPriority": 0,
-            "isZoneRedundant": false
-          }
-        ],
-        "capabilities": [
-          {
-            "name": "EnableMongo"
-          }
-        ],
-        "consistencyPolicy": {
-          "defaultConsistencyLevel": "Session",
-          "maxStalenessPrefix": 100,
-          "maxIntervalInSeconds": 5
-        },
-        "enableAutomaticFailover": false,
-        "enableMultipleWriteLocations": false,
-        "enableCassandraConnector": false,
-        "enableTable": false,
-        "enableGremlin": false,
-        "disableKeyBasedMetadataWriteAccess": false
-      }
-    },
-    {
-      "type": "Microsoft.DocumentDB/databaseAccounts/mongodbDatabases",
-      "apiVersion": "2021-10-15",
-      "name": "[concat(variables('cosmosDbAccountName'), '/', variables('databaseName'))]",
-      "dependsOn": [
-        "[resourceId('Microsoft.DocumentDB/databaseAccounts', variables('cosmosDbAccountName'))]"
-      ],
-      "properties": {
-        "resource": {
-          "id": "[variables('databaseName')]"
-        },
-        "options": {
-          "throughput": 400
-        }
-      }
-    },
-    {
-      "type": "Microsoft.Web/sites",
-      "apiVersion": "2021-02-01",
-      "name": "[variables('webAppName')]",
-      "location": "[parameters('location')]",
-      "kind": "linux",
-      "dependsOn": [
-        "[resourceId('Microsoft.Web/serverfarms', variables('appServicePlanName'))]"
-      ],
-      "properties": {
-        "serverFarmId": "[resourceId('Microsoft.Web/serverfarms', variables('appServicePlanName'))]",
-        "siteConfig": {
-          "linuxFxVersion": "[concat('NODE|', parameters('nodeVersion'))]",
-          "appSettings": [
-            {
-              "name": "WEBSITE_NODE_DEFAULT_VERSION",
-              "value": "[parameters('nodeVersion')]"
-            },
-            {
-              "name": "NODE_ENV",
-              "value": "production"
-            },
-            {
-              "name": "PORT",
-              "value": "8080"
-            },
-            {
-              "name": "WEBSITES_PORT",
-              "value": "8080"
-            },
-            {
-              "name": "APPINSIGHTS_INSTRUMENTATIONKEY",
-              "value": "[reference(resourceId('Microsoft.Insights/components', variables('applicationInsightsName')), '2020-02-02').InstrumentationKey]"
-            },
-            {
-              "name": "MONGODB_URI",
-              "value": "[concat('mongodb://', variables('cosmosDbAccountName'), ':', listKeys(resourceId('Microsoft.DocumentDB/databaseAccounts', variables('cosmosDbAccountName')), '2021-10-15').primaryMasterKey, '@', variables('cosmosDbAccountName'), '.mongo.cosmos.azure.com:10255/', variables('databaseName'), '?ssl=true&replicaSet=globaldb&retrywrites=false&maxIdleTimeMS=120000&appName=@', variables('cosmosDbAccountName'), '@')]"
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "appName": {
+            "type": "string",
+            "defaultValue": "movieswipe-backend",
+            "metadata": {
+                "description": "Name of the App Service"
             }
-          ]
+        },
+        "location": {
+            "type": "string",
+            "defaultValue": "[resourceGroup().location]",
+            "metadata": {
+                "description": "Location for all resources"
+            }
+        },
+        "sku": {
+            "type": "string",
+            "defaultValue": "B1",
+            "metadata": {
+                "description": "SKU for App Service Plan"
+            }
+        },
+        "nodeVersion": {
+            "type": "string",
+            "defaultValue": "18-lts",
+            "metadata": {
+                "description": "Node.js version"
+            }
+        },
+        "cosmosDbName": {
+            "type": "string",
+            "defaultValue": "movieswipe-cosmos",
+            "metadata": {
+                "description": "Name of the Cosmos DB account"
+            }
+        },
+        "databaseName": {
+            "type": "string",
+            "defaultValue": "movieswipe-db",
+            "metadata": {
+                "description": "Name of the MongoDB database"
+            }
         }
-      }
-    }
-  ],
-  "outputs": {
-    "webAppName": {
-      "type": "string",
-      "value": "[variables('webAppName')]"
     },
-    "webAppUrl": {
-      "type": "string",
-      "value": "[concat('https://', variables('webAppName'), '.azurewebsites.net')]"
+    "variables": {
+        "appServicePlanName": "[concat(parameters(\"appName\"),\"-plan\")]",
+        "webAppName": "[parameters(\"appName\")]",
+        "cosmosDbAccountName": "[parameters(\"cosmosDbName\")]",
+        "databaseName": "[parameters(\"databaseName\")]"
     },
-    "cosmosDbConnectionString": {
-      "type": "string",
-      "value": "[concat('mongodb://', variables('cosmosDbAccountName'), ':', listKeys(resourceId('Microsoft.DocumentDB/databaseAccounts', variables('cosmosDbAccountName')), '2021-10-15').primaryMasterKey, '@', variables('cosmosDbAccountName'), '.mongo.cosmos.azure.com:10255/', variables('databaseName'), '?ssl=true&replicaSet=globaldb&retrywrites=false&maxIdleTimeMS=120000&appName=@', variables('cosmosDbAccountName'), '@')]"
-    }
-  }
-} 
+    "resources": [
+        {
+            "type": "Microsoft.Web/serverfarms",
+            "apiVersion": "2021-02-01",
+            "name": "[variables(\"appServicePlanName\")]",
+            "location": "[parameters(\"location\")]",
+            "sku": {
+                "name": "[parameters(\"sku\")]"
+            },
+            "kind": "linux",
+            "properties": {
+                "reserved": true
+            }
+        },
+        {
+            "type": "Microsoft.DocumentDB/databaseAccounts",
+            "apiVersion": "2021-10-15",
+            "name": "[variables(\"cosmosDbAccountName\")]",
+            "location": "[parameters(\"location\")]",
+            "kind": "MongoDB",
+            "properties": {
+                "databaseAccountOfferType": "Standard",
+                "locations": [
+                    {
+                        "locationName": "[parameters(\"location\")]",
+                        "failoverPriority": 0,
+                        "isZoneRedundant": false
+                    }
+                ],
+                "capabilities": [
+                    {
+                        "name": "EnableMongo"
+                    }
+                ],
+                "consistencyPolicy": {
+                    "defaultConsistencyLevel": "Session",
+                    "maxStalenessPrefix": 100,
+                    "maxIntervalInSeconds": 5
+                },
+                "enableAutomaticFailover": false,
+                "enableMultipleWriteLocations": false,
+                "enableCassandraConnector": false,
+                "enableTable": false,
+                "enableGremlin": false,
+                "disableKeyBasedMetadataWriteAccess": false
+            }
+        },
+        {
+            "type": "Microsoft.DocumentDB/databaseAccounts/mongodbDatabases",
+            "apiVersion": "2021-10-15",
+            "name": "[concat(variables(\"cosmosDbAccountName\"),\"/\",variables(\"databaseName\"))]",
+            "dependsOn": [
+                "[resourceId(\"Microsoft.DocumentDB/databaseAccounts\",variables(\"cosmosDbAccountName\"))]"
+            ],
+            "properties": {
+                "resource": {
+                    "id": "[variables(\"databaseName\")]"
+                },
+                "options": {
+                    "throughput": 400
+                }
+            }
+        },
+        {
+            "type": "Microsoft.Web/sites",
+            "apiVersion": "2021-02-01",
+            "name": "[variables(\"webAppName\")]",
+            "location": "[parameters(\"location\")]",
+            "kind": "linux",
+            "dependsOn": [
+                "[resourceId(\"Microsoft.Web/serverfarms\",variables(\"appServicePlanName\"))]"
+            ],
+            "properties": {
+                "serverFarmId": "[resourceId(\"Microsoft.Web/serverfarms\",variables(\"appServicePlanName\"))]",
+                "siteConfig": {
+                    "linuxFxVersion": "[concat(\"NODE|\",parameters(\"nodeVersion\"))]",
+                    "appSettings": [
+                        {
+                            "name": "WEBSITE_NODE_DEFAULT_VERSION",
+                            "value": "[parameters(\"nodeVersion\")]"
+                        },
+                        {
+                            "name": "NODE_ENV",
+                            "value": "production"
+                        },
+                        {
+                            "name": "PORT",
+                            "value": "8080"
+                        },
+                        {
+                            "name": "WEBSITES_PORT",
+                            "value": "8080"
+                        },
+                        {
+                            "name": "MONGODB_URI",
+                            "value": "[concat(\"mongodb://\",variables(\"cosmosDbAccountName\"),\":\",listKeys(resourceId(\"Microsoft.DocumentDB/databaseAccounts\",variables(\"cosmosDbAccountName\")),\"2021-10-15\").primaryMasterKey,\"@\",variables(\"cosmosDbAccountName\"),\".mongo.cosmos.azure.com:10255/\",variables(\"databaseName\"),\"?ssl=true&replicaSet=globaldb&retrywrites=false&maxIdleTimeMS=120000&appName=@\",variables(\"cosmosDbAccountName\"),\"@\")]"
+                        }
+                    ]
+                }
+            }
+        },
+        {
+            "outputs": {
+                "webAppName": {
+                    "type": "string",
+                    "value": "[variables(\"webAppName\")]"
+                },
+                "webAppUrl": {
+                    "type": "string",
+                    "value": "[concat(\"https://\",variables(\"webAppName\"),\".azurewebsites.net\")]"
+                },
+                "cosmosDbConnectionString": {
+                    "type": "string",
+                    "value": "[concat(\"mongodb://\",variables(\"cosmosDbAccountName\"),\":\",listKeys(resourceId(\"Microsoft.DocumentDB/databaseAccounts\",variables(\"cosmosDbAccountName\")),\"2021-10-15\").primaryMasterKey,\"@\",variables(\"cosmosDbAccountName\"),\".mongo.cosmos.azure.com:10255/\",variables(\"databaseName\"),\"?ssl=true&replicaSet=globaldb&retrywrites=false&maxIdleTimeMS=120000&appName=@\",variables(\"cosmosDbAccountName\"),\"@\")]"
+                }
+            }
+        }
+    ]
+}
