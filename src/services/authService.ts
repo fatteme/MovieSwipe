@@ -3,6 +3,7 @@ import jwt from 'jsonwebtoken';
 import { User, IUser } from '../models/User';
 import { logger } from '../utils/logger';
 import config from '../config/environment';
+import type { StringValue } from "ms";
 
 export interface GoogleUserInfo {
   googleId: string;
@@ -90,11 +91,11 @@ export class AuthService {
   }
 
   private generateAccessToken(user: IUser): string {
-    return jwt.sign(user.toJSON(), config.ACCESS_TOKEN_SECRET, { expiresIn: config.ACCESS_TOKEN_EXPIRATION });
+    return jwt.sign(user.toJSON(), config.ACCESS_TOKEN_SECRET, { expiresIn: config.ACCESS_TOKEN_EXPIRATION as StringValue });
   }
 
   private generateRefreshToken(user: IUser): string {
-    return jwt.sign(user.toJSON(), config.REFRESH_TOKEN_SECRET, { expiresIn: config.REFRESH_TOKEN_EXPIRATION });
+    return jwt.sign(user.toJSON(), config.REFRESH_TOKEN_SECRET, { expiresIn: config.REFRESH_TOKEN_EXPIRATION as StringValue });
   }
 
   async authenticateWithGoogle(googleToken: string): Promise<AuthResult> {
