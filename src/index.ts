@@ -3,7 +3,7 @@ import cors from 'cors';
 import helmet from 'helmet';
 import morgan from 'morgan';
 import compression from 'compression';
-import config from '@config/environment';
+import config from './config/environment';
 
 const app = express();
 const PORT = config.PORT;
