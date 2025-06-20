@@ -1,12 +1,4 @@
 import dotenv from 'dotenv';
-import { existsSync } from 'fs';
-import { join } from 'path';
-
-// Check if .env file exists
-const envPath = join(process.cwd(), '.env');
-if (!existsSync(envPath)) {
-  throw new Error(`❌ .env file not found at ${envPath}. Please create a .env file based on env.example`);
-}
 
 // Load environment variables from .env file
 dotenv.config();
