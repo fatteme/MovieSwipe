@@ -1,6 +1,3 @@
-// User model and types
-// This file will contain both the Mongoose User schema and TypeScript User interfaces 
-
 import mongoose, { Document, Schema } from 'mongoose';
 
 // TypeScript interfaces
@@ -8,7 +5,6 @@ export interface IUser extends Document {
   googleId: string;
   email: string;
   name: string;
-  picture?: string;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -33,16 +29,8 @@ const userSchema = new Schema<IUser>({
     required: true,
     trim: true
   },
-  picture: {
-    type: String,
-    trim: true
-  }
 }, {
   timestamps: true
 });
-
-// Create indexes for better query performance
-userSchema.index({ email: 1 });
-userSchema.index({ googleId: 1 });
 
 export const User = mongoose.model<IUser>('User', userSchema); 

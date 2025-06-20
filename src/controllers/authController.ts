@@ -1,46 +1,33 @@
-// Authentication controller 
 import { Request, Response } from 'express';
-import { authService } from '../services/authService';
+import { AuthResult, authService } from '../services/authService';
 import { logger } from '../utils/logger';
 
 export interface GoogleAuthRequest extends Request {
   body: {
-    idToken: string;
+    googleToken: string;
   };
 }
 
-/**
- * Google authentication endpoint
- * POST /auth/google
- */
-export const googleAuth = async (req: GoogleAuthRequest, res: Response) => {
-  try {
-    const { idToken } = req.body;
+export interface GoogleAuthResponse {
+  message: string;
+  data?: AuthResult;
+}
 
-    // Validate request
-    if (!idToken) {
+export const googleAuth = async (req: GoogleAuthRequest, res: Response<GoogleAuthResponse>) => {
+  try {
+    const { googleToken } = req.body;
+
+    if (!googleToken) {
       return res.status(400).json({
-        success: false,
         message: 'Google ID token is required'
       });
     }
 
-    // Authenticate with Google
-    const authResult = await authService.authenticateWithGoogle(idToken);
+    const data = await authService.authenticateWithGoogle(googleToken);
 
-    // Return success response
-    res.status(200).json({
-      success: true,
+    return res.status(200).json({
       message: 'Authentication successful',
-      data: {
-        user: {
-          id: authResult.user._id,
-          email: authResult.user.email,
-          name: authResult.user.name,
-          picture: authResult.user.picture
-        },
-        token: authResult.token
-      }
+      data,
     });
 
   } catch (error) {
@@ -49,21 +36,18 @@ export const googleAuth = async (req: GoogleAuthRequest, res: Response) => {
     if (error instanceof Error) {
       if (error.message === 'Invalid Google token') {
         return res.status(401).json({
-          success: false,
           message: 'Invalid Google token'
         });
       }
       
       if (error.message === 'Failed to process user') {
         return res.status(500).json({
-          success: false,
           message: 'Failed to process user information'
         });
       }
     }
 
-    res.status(500).json({
-      success: false,
+    return res.status(500).json({
       message: 'Internal server error'
     });
   }

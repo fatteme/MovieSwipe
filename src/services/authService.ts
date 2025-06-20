@@ -5,10 +5,9 @@ import { logger } from '../utils/logger';
 import config from '../config/environment';
 
 export interface GoogleUserInfo {
-  sub: string; // Google ID
+  googleId: string;
   email: string;
   name: string;
-  picture?: string | undefined;
 }
 
 export interface AuthResult {
@@ -23,13 +22,10 @@ export class AuthService {
     this.googleClient = new OAuth2Client(config.GOOGLE_CLIENT_ID);
   }
 
-  /**
-   * Verify Google ID token and extract user information
-   */
-  async verifyGoogleToken(idToken: string): Promise<GoogleUserInfo> {
+  private async verifyGoogleToken(googleToken: string): Promise<GoogleUserInfo> {
     try {
       const ticket = await this.googleClient.verifyIdToken({
-        idToken,
+        idToken: googleToken,
         audience: config.GOOGLE_CLIENT_ID
       });
 
@@ -43,10 +39,9 @@ export class AuthService {
       }
 
       return {
-        sub: payload.sub,
+        googleId: payload.sub,
         email: payload.email,
         name: payload.name,
-        picture: payload.picture
       };
     } catch (error) {
       logger.error('Google token verification failed:', error);
@@ -54,33 +49,33 @@ export class AuthService {
     }
   }
 
-  /**
-   * Find or create user based on Google information
-   */
-  async findOrCreateUser(googleUserInfo: GoogleUserInfo): Promise<IUser> {
+
+  private async findOrCreateUser(googleUserInfo: GoogleUserInfo): Promise<IUser> {
     try {
-      // Try to find existing user by Google ID
-      let user = await User.findOne({ googleId: googleUserInfo.sub });
+      let user = await User.findOne({ googleId: googleUserInfo.googleId });
 
       if (!user) {
-        // Create new user if not found
-        user = new User({
-          googleId: googleUserInfo.sub,
-          email: googleUserInfo.email,
-          name: googleUserInfo.name,
-          picture: googleUserInfo.picture
-        });
+        user = new User(googleUserInfo);
 
         await user.save();
         logger.info(`New user created: ${user.email}`);
       } else {
-        // Update existing user's information
-        user.name = googleUserInfo.name;
-        if (googleUserInfo.picture) {
-          user.picture = googleUserInfo.picture;
+        let needsUpdate = false;
+
+        if (user.name !== googleUserInfo.name) {
+          user.name = googleUserInfo.name;
+          needsUpdate = true;
         }
-        await user.save();
-        logger.info(`User updated: ${user.email}`);
+        
+        if (user.email !== googleUserInfo.email) {
+          user.email = googleUserInfo.email;
+          needsUpdate = true;
+        }
+        
+        if (needsUpdate) {
+          await user.save();
+          logger.info(`User updated: ${user.email}`);
+        }
       }
 
       return user;
@@ -90,33 +85,24 @@ export class AuthService {
     }
   }
 
-  /**
-   * Generate JWT token for user
-   */
-  generateJWTToken(user: IUser): string {
+
+  private generateJWTToken(user: IUser): string {
     const payload = {
       userId: user._id,
       email: user.email,
       googleId: user.googleId
     };
 
-    return jwt.sign(payload, config.JWT_SECRET, {
-      expiresIn: config.JWT_EXPIRES_IN
-    });
+    return jwt.sign(payload, config.JWT_SECRET);
   }
 
-  /**
-   * Main authentication method
-   */
-  async authenticateWithGoogle(idToken: string): Promise<AuthResult> {
-    try {
-      // Verify Google token
-      const googleUserInfo = await this.verifyGoogleToken(idToken);
 
-      // Find or create user
+  async authenticateWithGoogle(googleToken: string): Promise<AuthResult> {
+    try {
+      const googleUserInfo = await this.verifyGoogleToken(googleToken);
+
       const user = await this.findOrCreateUser(googleUserInfo);
 
-      // Generate JWT token
       const token = this.generateJWTToken(user);
 
       return { user, token };

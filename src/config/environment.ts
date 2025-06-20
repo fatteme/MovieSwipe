@@ -9,9 +9,6 @@ interface EnvironmentConfig {
   MONGODB_URI: string;
   MONGODB_URI_TEST: string;
   JWT_SECRET: string;
-  JWT_EXPIRES_IN: string;
-  API_PREFIX: string;
-  CORS_ORIGIN: string;
   GOOGLE_CLIENT_ID: string;
 }
 
@@ -30,9 +27,6 @@ const config: EnvironmentConfig = {
   MONGODB_URI: getEnvVariable('MONGODB_URI'),
   MONGODB_URI_TEST: getEnvVariable('MONGODB_URI_TEST'),
   JWT_SECRET: getEnvVariable('JWT_SECRET'),
-  JWT_EXPIRES_IN: getEnvVariable('JWT_EXPIRES_IN'),
-  API_PREFIX: getEnvVariable('API_PREFIX'),
-  CORS_ORIGIN: getEnvVariable('CORS_ORIGIN'),
   GOOGLE_CLIENT_ID: getEnvVariable('GOOGLE_CLIENT_ID'),
 };
 
