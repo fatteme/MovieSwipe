@@ -11,7 +11,7 @@ export interface CreateGroupRequest extends AuthenticatedRequest {
 
 export interface GroupResponse {
   message: string;
-  data?: IGroup | IPopulatedGroup;
+  data?: IGroup | IPopulatedGroup | IPopulatedGroup[];
 }
 
 export const createGroup = async (req: CreateGroupRequest, res: Response<GroupResponse>) => {
@@ -98,3 +98,28 @@ export const getGroupById = async (req: AuthenticatedRequest, res: Response<Grou
     });
   }
 }; 
+
+
+export const getUserGroups = async (req: AuthenticatedRequest, res: Response<GroupResponse>) => {
+  try {
+    const userId = req.user?._id;
+
+    if (!userId) {
+      return res.status(401).json({
+        message: 'User not authenticated'
+      });
+    }
+
+    const groups = await groupService.getUserGroups(userId);
+
+    return res.status(200).json({
+      message: 'Groups retrieved successfully',
+      data: groups
+    });
+  } catch (error) {   
+    logger.error('Get user groups error:', error);
+    return res.status(500).json({
+      message: 'Internal server error'
+    });
+  }
+};

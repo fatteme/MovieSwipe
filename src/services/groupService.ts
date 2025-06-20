@@ -1,5 +1,6 @@
+import mongoose from 'mongoose';
 import { Group, IPopulatedGroup } from '../models/Group';
-import { User } from '../models/User';
+import { IUser, User } from '../models/User';
 import { logger } from '../utils/logger';
 
 export interface CreateGroupData {
@@ -73,6 +74,18 @@ export class GroupService {
       throw error;
     }
   }
+
+  async getUserGroups(userId: mongoose.Types.ObjectId): Promise<IPopulatedGroup[]> {
+    try {
+      return await Group.find({ members: userId })
+        .populate<{ owner: IUser }>('owner', 'name email')
+        .populate<{ members: IUser[] }>('members', 'name email');
+    } catch (error) {
+      logger.error('Error fetching user groups:', error);
+      throw error;
+    }
+  }
 }
+
 
 export const groupService = new GroupService(); 
