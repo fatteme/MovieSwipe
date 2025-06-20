@@ -10,6 +10,19 @@ export interface IGroup extends Document {
   updatedAt: Date;
 }
 
+export interface IPopulatedGroup extends Omit<IGroup, 'owner' | 'members'> {
+  owner: {
+    _id: mongoose.Types.ObjectId;
+    name: string;
+    email: string;
+  };
+  members: Array<{
+    _id: mongoose.Types.ObjectId;
+    name: string;
+    email: string;
+  }>;
+}
+
 // Mongoose schema
 const groupSchema = new Schema<IGroup>({
   owner: {

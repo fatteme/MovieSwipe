@@ -1,7 +1,7 @@
 import { Response } from 'express';
 import { groupService} from '../services/groupService';
 import { logger } from '../utils/logger';
-import { IGroup } from '../models';
+import { IGroup, IPopulatedGroup } from '../models';
 import { AuthenticatedRequest } from '../middleware/auth';
 
 
@@ -11,7 +11,7 @@ export interface CreateGroupRequest extends AuthenticatedRequest {
 
 export interface GroupResponse {
   message: string;
-  data?: IGroup;
+  data?: IGroup | IPopulatedGroup;
 }
 
 export const createGroup = async (req: CreateGroupRequest, res: Response<GroupResponse>) => {

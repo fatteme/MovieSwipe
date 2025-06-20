@@ -1,4 +1,4 @@
-import { Group, IGroup } from '../models/Group';
+import { Group, IPopulatedGroup } from '../models/Group';
 import { User } from '../models/User';
 import { logger } from '../utils/logger';
 
@@ -13,7 +13,7 @@ export class GroupService {
     return code.join('');
   }
 
-  async createGroup(data: CreateGroupData): Promise<IGroup> {
+  async createGroup(data: CreateGroupData): Promise<IPopulatedGroup> {
     try {
       const owner = await User.findById(data.ownerId);
       if (!owner) {
@@ -47,16 +47,27 @@ export class GroupService {
 
       logger.info(`Group created by user ${data.ownerId}`);
 
-      return group;
+      const populatedGroup = await Group.findById(group._id)
+        .populate('owner', 'name email')
+        .populate('members', 'name email') as IPopulatedGroup | null;
+      
+      if (!populatedGroup) {
+        throw new Error('Failed to retrieve created group');
+      }
+
+      return populatedGroup;
+
     } catch (error) {
       logger.error('Error creating group:', error);
       throw error;
     }
   }
 
-  async getGroupById(groupId: string): Promise<IGroup | null> {
+  async getGroupById(groupId: string): Promise<IPopulatedGroup | null> {
     try {
-      return await Group.findById(groupId);
+      return await Group.findById(groupId)
+        .populate('owner', 'name email')
+        .populate('members', 'name email') as IPopulatedGroup | null;
     } catch (error) {
       logger.error('Error fetching group:', error);
       throw error;
