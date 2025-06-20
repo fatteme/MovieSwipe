@@ -17,6 +17,12 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: '18'
+      
+      - name: Upload .env file
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          port: ${{ secrets.PORT }}
+          mongodb_uri: ${{ secrets.MONGODB_URI }}
 
       - name: Install dependencies and build
         run: |
