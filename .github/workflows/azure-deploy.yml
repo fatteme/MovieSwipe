@@ -42,4 +42,4 @@ jobs:
           script: |
             cd ${{ secrets.VM_TARGET_PATH }}
             npm install
-            pm2 restart app || pm2 start index.js --name movieswipe
+            pm2 restart app || pm2 start dist/index.js --name movieswipe
