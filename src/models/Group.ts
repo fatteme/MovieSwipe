@@ -6,6 +6,7 @@ export interface IGroup extends Document {
   owner: mongoose.Types.ObjectId;
   members: mongoose.Types.ObjectId[];
   invitationCode: string;
+  preferences: Map<string, mongoose.Types.ObjectId[]>;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -43,6 +44,14 @@ const groupSchema = new Schema<IGroup>({
     index: true,
     minlength: 6,
     maxlength: 10
+  },
+  preferences: {
+    type: Map,
+    of: [{
+      type: Schema.Types.ObjectId,
+      ref: 'Genre'
+    }],
+    default: new Map()
   }
 }, {
   timestamps: true

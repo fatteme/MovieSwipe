@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { createGroup, getGroupById, getUserGroups, joinGroup } from '../controllers/groupController';
+import { createGroup, getGroupById, getUserGroups, joinGroup, updateMemberPreferences, getMemberPreferences } from '../controllers/groupController';
 
 const router = Router();
 
@@ -14,6 +14,18 @@ router.post('/', createGroup);
  * @desc    Join a group using invitation code
  */
 router.post('/join', joinGroup);
+
+/**
+ * @route   POST /groups/:groupId/preferences
+ * @desc    Update member preferences for a group
+ */
+router.post('/:groupId/preferences', updateMemberPreferences);
+
+/**
+ * @route   GET /groups/:groupId/preferences
+ * @desc    Get member preferences for a group
+ */
+router.get('/:groupId/preferences', getMemberPreferences);
 
 /**
  * @route   GET /groups/:groupId
