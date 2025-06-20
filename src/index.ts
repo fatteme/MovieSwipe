@@ -4,6 +4,7 @@ import morgan from 'morgan';
 import compression from 'compression';
 import config from './config/environment';
 import routes from './routes';
+import { connectDB } from './config/database';
 
 const app = express();
 const PORT = config.PORT;
@@ -26,7 +27,7 @@ app.get('/health', (_, res) => {
 
 const startServer = async () => {
   try {
-    // await connectDB();
+    await connectDB();
     
     app.listen(PORT, () => {
       console.log(`🚀 MovieSwipe Backend running on port ${PORT}`);
