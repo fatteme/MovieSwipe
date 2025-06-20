@@ -1,0 +1,148 @@
+name: Deploy to Azure
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+env:
+  NODE_VERSION: '18.x'
+  RESOURCE_GROUP: 'movieswipe-rg'
+  LOCATION: 'eastus'
+  APP_NAME: 'movieswipe-backend'
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ env.NODE_VERSION }}
+        cache: 'npm'
+    
+    - name: Install dependencies
+      run: npm ci
+    
+    - name: Run linting
+      run: npm run lint
+    
+    - name: Build application
+      run: npm run build
+    
+    - name: Run tests
+      run: npm test
+    
+    - name: Upload build artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: dist
+        path: dist/
+
+  deploy-infrastructure:
+    needs: build-and-test
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Azure Login
+      uses: azure/login@v1
+      with:
+        creds: ${{ secrets.AZURE_CREDENTIALS }}
+    
+    - name: Create Resource Group
+      run: |
+        az group create --name ${{ env.RESOURCE_GROUP }} --location ${{ env.LOCATION }} --output none
+        echo "✅ Resource group created/verified"
+    
+    - name: Deploy Infrastructure
+      run: |
+        az deployment group create \
+          --resource-group ${{ env.RESOURCE_GROUP }} \
+          --template-file azure-deploy.json \
+          --parameters azure-deploy.parameters.json \
+          --output table
+        echo "✅ Infrastructure deployed successfully"
+
+  configure-app:
+    needs: deploy-infrastructure
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    
+    steps:
+    - name: Azure Login
+      uses: azure/login@v1
+      with:
+        creds: ${{ secrets.AZURE_CREDENTIALS }}
+    
+    - name: Configure Application Settings
+      run: |
+        az webapp config appsettings set \
+          --resource-group ${{ env.RESOURCE_GROUP }} \
+          --name ${{ env.APP_NAME }} \
+          --settings \
+            NODE_ENV=production \
+            PORT=8080 \
+            WEBSITES_PORT=8080 \
+            WEBSITE_NODE_DEFAULT_VERSION=18-lts
+        echo "✅ Application settings configured"
+
+  deploy-app:
+    needs: configure-app
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Download build artifacts
+      uses: actions/download-artifact@v4
+      with:
+        name: dist
+        path: dist/
+    
+    - name: Azure Login
+      uses: azure/login@v1
+      with:
+        creds: ${{ secrets.AZURE_CREDENTIALS }}
+    
+    - name: Deploy to Azure Web App
+      uses: azure/webapps-deploy@v3
+      with:
+        app-name: ${{ env.APP_NAME }}
+        package: dist/
+    
+    - name: Get deployment URL
+      run: |
+        WEB_APP_URL=$(az webapp show --resource-group ${{ env.RESOURCE_GROUP }} --name ${{ env.APP_NAME }} --query "defaultHostName" --output tsv)
+        echo "✅ Deployment completed successfully!"
+        echo "🌐 Your app is available at: https://$WEB_APP_URL"
+        echo "WEB_APP_URL=https://$WEB_APP_URL" >> $GITHUB_ENV
+
+  post-deploy:
+    needs: deploy-app
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    
+    steps:
+    - name: Deployment Summary
+      run: |
+        echo "🎉 Deployment Summary:"
+        echo "✅ Build completed"
+        echo "✅ Infrastructure deployed"
+        echo "✅ Application configured"
+        echo "✅ Application deployed"
+        echo ""
+        echo "📋 Next steps:"
+        echo "1. Set up environment variables in Azure App Service Configuration"
+        echo "2. Configure your database connection string"
+        echo "3. Set up custom domain (optional)"
+        echo "4. Configure SSL certificate (optional)"
+        echo ""
+        echo "🔗 App URL: ${{ env.WEB_APP_URL }}" 
