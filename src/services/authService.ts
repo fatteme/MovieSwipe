@@ -90,11 +90,11 @@ export class AuthService {
   }
 
   private generateAccessToken(user: IUser): string {
-    return jwt.sign(user.toJSON(), config.ACCESS_TOKEN_SECRET, { expiresIn: '1d' });
+    return jwt.sign(user.toJSON(), config.ACCESS_TOKEN_SECRET, { expiresIn: config.ACCESS_TOKEN_EXPIRATION });
   }
 
   private generateRefreshToken(user: IUser): string {
-    return jwt.sign(user.toJSON(), config.REFRESH_TOKEN_SECRET, { expiresIn: '7d' });
+    return jwt.sign(user.toJSON(), config.REFRESH_TOKEN_SECRET, { expiresIn: config.REFRESH_TOKEN_EXPIRATION });
   }
 
   async authenticateWithGoogle(googleToken: string): Promise<AuthResult> {

@@ -9,7 +9,9 @@ interface EnvironmentConfig {
   MONGODB_URI: string;
   MONGODB_URI_TEST: string;
   ACCESS_TOKEN_SECRET: string;
+  ACCESS_TOKEN_EXPIRATION: string;
   REFRESH_TOKEN_SECRET: string;
+  REFRESH_TOKEN_EXPIRATION: string;
   GOOGLE_CLIENT_ID: string;
 }
 
@@ -28,7 +30,9 @@ const config: EnvironmentConfig = {
   MONGODB_URI: getEnvVariable('MONGODB_URI'),
   MONGODB_URI_TEST: getEnvVariable('MONGODB_URI_TEST'),
   ACCESS_TOKEN_SECRET: getEnvVariable('ACCESS_TOKEN_SECRET'),
+  ACCESS_TOKEN_EXPIRATION: getEnvVariable('ACCESS_TOKEN_EXPIRATION'),
   REFRESH_TOKEN_SECRET: getEnvVariable('REFRESH_TOKEN_SECRET'),
+  REFRESH_TOKEN_EXPIRATION: getEnvVariable('REFRESH_TOKEN_EXPIRATION'),
   GOOGLE_CLIENT_ID: getEnvVariable('GOOGLE_CLIENT_ID'),
 };
 
