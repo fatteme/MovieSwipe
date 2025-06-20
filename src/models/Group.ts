@@ -2,7 +2,7 @@ import mongoose, { Document, Schema } from 'mongoose';
 
 // TypeScript interfaces
 export interface IGroup extends Document {
-  name: string;
+  _id: mongoose.Types.ObjectId;
   owner: mongoose.Types.ObjectId;
   members: mongoose.Types.ObjectId[];
   invitationCode: string;
@@ -12,12 +12,6 @@ export interface IGroup extends Document {
 
 // Mongoose schema
 const groupSchema = new Schema<IGroup>({
-  name: {
-    type: String,
-    required: true,
-    trim: true,
-    maxlength: 100
-  },
   owner: {
     type: Schema.Types.ObjectId,
     ref: 'User',

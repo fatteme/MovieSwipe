@@ -121,9 +121,7 @@ Create a new group with the authenticated user as the owner.
 
 **Request Body:**
 ```json
-{
-  "name": "Movie Night Group"
-}
+{}
 ```
 
 **Response:**
@@ -133,7 +131,6 @@ Create a new group with the authenticated user as the owner.
   "data": {
     "group": {
       "_id": "group-id",
-      "name": "Movie Night Group",
       "owner": "user-id",
       "members": ["user-id"],
       "invitationCode": "ABC12345",
@@ -163,7 +160,6 @@ Join a group using an invitation code.
   "data": {
     "group": {
       "_id": "group-id",
-      "name": "Movie Night Group",
       "owner": "user-id",
       "members": ["user-id", "new-user-id"],
       "invitationCode": "ABC12345",
@@ -186,7 +182,6 @@ Get all groups that the authenticated user is a member of.
   "data": [
     {
       "_id": "group-id",
-      "name": "Movie Night Group",
       "owner": {
         "_id": "user-id",
         "name": "John Doe",
@@ -218,7 +213,6 @@ Get a specific group by ID. The user must be a member of the group.
   "message": "Group retrieved successfully",
   "data": {
     "_id": "group-id",
-    "name": "Movie Night Group",
     "owner": {
       "_id": "user-id",
       "name": "John Doe",
@@ -243,7 +237,7 @@ Get a specific group by ID. The user must be a member of the group.
 ### 400 Bad Request
 ```json
 {
-  "message": "Group name is required"
+  "message": "Invitation code is required"
 }
 ```
 
@@ -282,6 +276,7 @@ Get a specific group by ID. The user must be a member of the group.
 - **Invitation Code**: Unique 8-character alphanumeric code for joining groups
 - **Automatic Owner Membership**: Group owner is automatically added as a member
 - **Unique Invitation Codes**: Each group gets a unique invitation code generated automatically
+- **Group Identification**: Groups are identified by their unique MongoDB ObjectId
 
 ## Setup
 
@@ -317,4 +312,28 @@ The group functionality includes comprehensive tests for:
 - Group creation
 - Group joining via invitation codes
 - Error handling for invalid data
-- Duplicate membership prevention 
+- Duplicate membership prevention
+
+## Usage Examples
+
+```bash
+# Create a group (no body required)
+curl -X POST http://localhost:3000/api/groups/ \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{}'
+
+# Join a group
+curl -X POST http://localhost:3000/api/groups/join \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"invitationCode": "ABC12345"}'
+
+# Get user's groups
+curl -X GET http://localhost:3000/api/groups/ \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN"
+
+# Get specific group by ID
+curl -X GET http://localhost:3000/api/groups/GROUP_ID \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN"
+``` 

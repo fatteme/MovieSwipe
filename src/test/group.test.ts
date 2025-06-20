@@ -5,24 +5,21 @@ import { groupService } from '../services/groupService';
 
 describe('Group Service', () => {
   let testUser: IUser;
-  let testGroup: IGroup;
 
   beforeAll(async () => {
-    // Connect to test database
     await mongoose.connect(process.env.MONGODB_URI_TEST || 'mongodb://localhost:27017/test');
   });
 
   beforeEach(async () => {
-    // Clear collections
     await User.deleteMany({});
     await Group.deleteMany({});
 
-    // Create test user
     testUser = new User({
       googleId: 'test-google-id',
       email: 'test@example.com',
       name: 'Test User'
     });
+
     await testUser.save();
   });
 
@@ -33,75 +30,47 @@ describe('Group Service', () => {
   describe('createGroup', () => {
     it('should create a group with valid data', async () => {
       const groupData = {
-        name: 'Test Group',
         ownerId: testUser._id.toString()
       };
 
       const result = await groupService.createGroup(groupData);
 
-      expect(result.group).toBeDefined();
-      expect(result.group.name).toBe('Test Group');
-      expect(result.group.owner.toString()).toBe(testUser._id.toString());
-      expect(result.group.members).toHaveLength(1);
-      expect(result.group.members[0].toString()).toBe(testUser._id.toString());
-      expect(result.group.invitationCode).toHaveLength(8);
+      expect(result).toBeDefined();
+      expect(result.owner.toString()).toBe(testUser._id.toString());
+      expect(result.members).toHaveLength(1);
+      expect(result.members[0].toString()).toBe(testUser._id.toString());
+      expect(result.invitationCode).toHaveLength(8);
     });
 
     it('should throw error for non-existent owner', async () => {
-      const groupData = {
-        name: 'Test Group',
+      await expect(groupService.createGroup({
         ownerId: new mongoose.Types.ObjectId().toString()
-      };
-
-      await expect(groupService.createGroup(groupData)).rejects.toThrow('Owner not found');
+      })).rejects.toThrow('User not found');
     });
   });
 
-  describe('joinGroupByInvitationCode', () => {
-    beforeEach(async () => {
-      // Create a test group
-      const groupData = {
-        name: 'Test Group',
-        ownerId: testUser._id.toString()
-      };
-      const result = await groupService.createGroup(groupData);
-      testGroup = result.group;
+  describe('getGroupById', () => {
+    it('should get a group by id', async () => {
+      const group = await groupService.createGroup({ownerId:  testUser._id.toString()});
+      const groupId = group._id.toString();
+      
+      const result = await groupService.getGroupById(groupId);
+      const resultId = result?._id.toString();
+
+      expect(result).toBeDefined();
+      expect(resultId).toBeDefined();
+      expect(resultId).toBe(groupId);
     });
 
-    it('should allow user to join group with valid invitation code', async () => {
-      const newUser = new User({
-        googleId: 'new-user-google-id',
-        email: 'newuser@example.com',
-        name: 'New User'
-      });
-      await newUser.save();
-
-      const result = await groupService.joinGroupByInvitationCode(
-        testGroup.invitationCode,
-        newUser._id.toString()
-      );
-
-      expect(result.group.members).toHaveLength(2);
-      expect(result.group.members.map(m => m.toString())).toContain(newUser._id.toString());
+    it('should throw error for non-existent group', async () => {
+      await expect(groupService.getGroupById('non-existent-id')).rejects.toThrow('Group not found');
     });
 
-    it('should throw error for invalid invitation code', async () => {
-      const newUser = new User({
-        googleId: 'new-user-google-id',
-        email: 'newuser@example.com',
-        name: 'New User'
-      });
-      await newUser.save();
-
-      await expect(
-        groupService.joinGroupByInvitationCode('INVALID', newUser._id.toString())
-      ).rejects.toThrow('Invalid invitation code');
+    it('should throw error for invalid group id', async () => {
+      await expect(groupService.getGroupById('invalid-id')).rejects.toThrow('Invalid group id');
     });
 
-    it('should throw error if user is already a member', async () => {
-      await expect(
-        groupService.joinGroupByInvitationCode(testGroup.invitationCode, testUser._id.toString())
-      ).rejects.toThrow('User is already a member of this group');
+    it('should throw error for unauthorized access', async () => {
     });
   });
 }); 

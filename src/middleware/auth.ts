@@ -1,15 +1,10 @@
 import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
 import config from '../config/environment';
-import { User } from '../models/User';
+import { IUser, User } from '../models/User';
 
 export interface AuthenticatedRequest extends Request {
-  user?: {
-    _id: string;
-    googleId: string;
-    email: string;
-    name: string;
-  };
+  user?: IUser;
 }
 
 export const authenticateToken = async (
@@ -30,25 +25,20 @@ export const authenticateToken = async (
   }
 
   try {
-    const decoded = jwt.verify(token, config.ACCESS_TOKEN_SECRET) as any;
+    const decoded = jwt.verify(token, config.ACCESS_TOKEN_SECRET) as IUser;
     
     if (!decoded._id) {
       return res.status(401).json({ message: 'Invalid token format' });
     }
     
-    // Verify user still exists in database
     const user = await User.findById(decoded._id);
     if (!user) {
       return res.status(401).json({ message: 'User not found' });
     }
     
-    req.user = {
-      _id: decoded._id,
-      googleId: decoded.googleId,
-      email: decoded.email,
-      name: decoded.name
-    };
-    next();
+    req.user = user;
+
+    return next();
   } catch (err) {
     return res.status(401).json({ message: 'Invalid or expired token' });
   }
