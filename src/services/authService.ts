@@ -116,8 +116,8 @@ export class AuthService {
   async refreshAccessToken(refreshToken: string): Promise<RefreshTokenResult> {
     try {
       const payload = jwt.verify(refreshToken, config.REFRESH_TOKEN_SECRET) as IUser;
-
-      const user = await User.findById(payload.googleId);
+      const user = await User.findById(payload._id);
+      
       if (!user) throw new Error('User not found');
 
       const token = this.generateAccessToken(user);
