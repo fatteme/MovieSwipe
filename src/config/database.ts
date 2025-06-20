@@ -3,8 +3,8 @@ import config from '@config/environment';
 
 export const connectDB = async (): Promise<void> => {
   try {
-    const uri = config.NODE_ENV === 'test' ? config.MONGODB_URI_TEST : config.MONGODB_URI;
-    
+    const uri = config.NODE_ENV === 'test' ? config.MONGODB_URI_TEST : process.env['COSMOS_DB_CONN_STRING'] || '';
+
     await mongoose.connect(uri);
     
     console.log(`✅ MongoDB connected successfully in ${config.NODE_ENV} mode`);
