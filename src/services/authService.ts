@@ -1,9 +1,9 @@
 import { OAuth2Client } from 'google-auth-library';
 import jwt from 'jsonwebtoken';
-import { User, IUser } from '../models/User';
-import { logger } from '../utils/logger';
-import config from '../config/environment';
 import type { StringValue } from "ms";
+import config from '../config/environment';
+import { IUser, User } from '../models/User';
+import { logger } from '../utils/logger';
 
 export interface GoogleUserInfo {
   googleId: string;
