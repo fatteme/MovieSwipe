@@ -13,6 +13,7 @@ interface EnvironmentConfig {
   REFRESH_TOKEN_SECRET: string;
   REFRESH_TOKEN_EXPIRATION: string;
   GOOGLE_CLIENT_ID: string;
+  TMDB_API_KEY: string;
 }
 
 const getEnvVariable = (key: string): string => {
@@ -34,6 +35,7 @@ const config: EnvironmentConfig = {
   REFRESH_TOKEN_SECRET: getEnvVariable('REFRESH_TOKEN_SECRET'),
   REFRESH_TOKEN_EXPIRATION: getEnvVariable('REFRESH_TOKEN_EXPIRATION'),
   GOOGLE_CLIENT_ID: getEnvVariable('GOOGLE_CLIENT_ID'),
+  TMDB_API_KEY: getEnvVariable('TMDB_API_KEY'),
 };
 
 export default config;

@@ -105,6 +105,7 @@ A RESTful API for movie swiping application with group functionality.
 - Group creation and management
 - Invitation-based group joining
 - JWT token-based authentication
+- Movie genres from TMDB
 
 ## Group API Endpoints
 
@@ -232,6 +233,82 @@ Get a specific group by ID. The user must be a member of the group.
 }
 ```
 
+## Genre API Endpoints
+
+### No Authentication Required
+Genre endpoints are public and do not require authentication.
+
+### Get All Genres
+**GET** `/api/genres`
+
+Get all available movie genres from TMDB.
+
+**Response:**
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "id": 28,
+      "name": "Action"
+    },
+    {
+      "id": 12,
+      "name": "Adventure"
+    },
+    {
+      "id": 16,
+      "name": "Animation"
+    }
+  ],
+  "message": "Genres retrieved successfully"
+}
+```
+
+### Get Genre by ID
+**GET** `/api/genres/:id`
+
+Get a specific genre by its TMDB ID.
+
+**Response:**
+```json
+{
+  "success": true,
+  "data": {
+    "id": 28,
+    "name": "Action"
+  },
+  "message": "Genre retrieved successfully"
+}
+```
+
+**Error Responses:**
+
+**400 Bad Request** (Invalid ID):
+```json
+{
+  "success": false,
+  "message": "Invalid genre ID provided"
+}
+```
+
+**404 Not Found** (Genre not found):
+```json
+{
+  "success": false,
+  "message": "Genre not found"
+}
+```
+
+**500 Internal Server Error**:
+```json
+{
+  "success": false,
+  "message": "Failed to retrieve genres",
+  "error": "Error message"
+}
+```
+
 ## Error Responses
 
 ### 400 Bad Request
@@ -294,6 +371,7 @@ MONGODB_URI_TEST=mongodb://localhost:27017/movieswipe-test
 ACCESS_TOKEN_SECRET=your-access-token-secret
 REFRESH_TOKEN_SECRET=your-refresh-token-secret
 GOOGLE_CLIENT_ID=your-google-client-id
+TMDB_API_KEY=your-tmdb-api-key
 ```
 
 3. Run the application:
@@ -336,4 +414,10 @@ curl -X GET http://localhost:3000/api/groups/ \
 # Get specific group by ID
 curl -X GET http://localhost:3000/api/groups/GROUP_ID \
   -H "Authorization: Bearer YOUR_JWT_TOKEN"
+
+# Get all genres
+curl -X GET http://localhost:3000/api/genres
+
+# Get specific genre by ID
+curl -X GET http://localhost:3000/api/genres/28
 ``` 

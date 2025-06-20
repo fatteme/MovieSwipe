@@ -1,1 +1,339 @@
- 
+openapi: 3.0.3
+info:
+  title: MovieSwipe Groups API
+  description: API for managing groups in the MovieSwipe application
+  version: 1.0.0
+  contact:
+    name: MovieSwipe Team
+    email: support@movieswipe.com
+
+servers:
+  - url: http://localhost:3000
+    description: Development server
+  - url: https://api.movieswipe.com
+    description: Production server
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: JWT token obtained from authentication endpoint
+
+  schemas:
+    User:
+      type: object
+      properties:
+        _id:
+          type: string
+          format: objectId
+          example: "507f1f77bcf86cd799439011"
+        name:
+          type: string
+          example: "John Doe"
+        email:
+          type: string
+          format: email
+          example: "john.doe@example.com"
+        createdAt:
+          type: string
+          format: date-time
+          example: "2023-12-01T10:00:00.000Z"
+        updatedAt:
+          type: string
+          format: date-time
+          example: "2023-12-01T10:00:00.000Z"
+      required:
+        - _id
+        - name
+        - email
+
+    Group:
+      type: object
+      properties:
+        _id:
+          type: string
+          format: objectId
+          example: "507f1f77bcf86cd799439012"
+        owner:
+          $ref: '#/components/schemas/User'
+        members:
+          type: array
+          items:
+            $ref: '#/components/schemas/User'
+          example:
+            - _id: "507f1f77bcf86cd799439011"
+              name: "John Doe"
+              email: "john.doe@example.com"
+            - _id: "507f1f77bcf86cd799439013"
+              name: "Jane Smith"
+              email: "jane.smith@example.com"
+        invitationCode:
+          type: string
+          minLength: 6
+          maxLength: 10
+          example: "ABC12345"
+        createdAt:
+          type: string
+          format: date-time
+          example: "2023-12-01T10:00:00.000Z"
+        updatedAt:
+          type: string
+          format: date-time
+          example: "2023-12-01T10:00:00.000Z"
+      required:
+        - _id
+        - owner
+        - members
+        - invitationCode
+
+    GroupResponse:
+      type: object
+      properties:
+        message:
+          type: string
+          example: "Group created successfully"
+        data:
+          $ref: '#/components/schemas/Group'
+
+    ErrorResponse:
+      type: object
+      properties:
+        message:
+          type: string
+          example: "Internal server error"
+
+    ValidationError:
+      type: object
+      properties:
+        message:
+          type: string
+          example: "Validation failed"
+        errors:
+          type: array
+          items:
+            type: object
+            properties:
+              field:
+                type: string
+                example: "invitationCode"
+              message:
+                type: string
+                example: "Invitation code is required"
+
+paths:
+  /groups:
+    post:
+      summary: Create a new group
+      description: Creates a new group with the authenticated user as the owner. The user is automatically added as a member and a unique invitation code is generated.
+      tags:
+        - Groups
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties: {}
+              description: No request body required - group is created with authenticated user as owner
+            example: {}
+      responses:
+        '201':
+          description: Group created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GroupResponse'
+              example:
+                message: "Group created successfully"
+                data:
+                  _id: "507f1f77bcf86cd799439012"
+                  owner:
+                    _id: "507f1f77bcf86cd799439011"
+                    name: "John Doe"
+                    email: "john.doe@example.com"
+                  members:
+                    - _id: "507f1f77bcf86cd799439011"
+                      name: "John Doe"
+                      email: "john.doe@example.com"
+                  invitationCode: "ABC12345"
+                  createdAt: "2023-12-01T10:00:00.000Z"
+                  updatedAt: "2023-12-01T10:00:00.000Z"
+        '401':
+          description: User not authenticated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                message: "User not authenticated"
+        '404':
+          description: User not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error or failed to generate unique invitation code
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                message: "Failed to create group. Please try again."
+
+    get:
+      summary: Get all user's groups
+      description: Retrieves all groups where the authenticated user is a member
+      tags:
+        - Groups
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Groups retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Groups retrieved successfully"
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Group'
+        '401':
+          description: User not authenticated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /groups/join:
+    post:
+      summary: Join a group using invitation code
+      description: Allows a user to join an existing group using a valid invitation code
+      tags:
+        - Groups
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                invitationCode:
+                  type: string
+                  minLength: 6
+                  maxLength: 10
+                  description: The invitation code for the group
+                  example: "ABC12345"
+              required:
+                - invitationCode
+            example:
+              invitationCode: "ABC12345"
+      responses:
+        '200':
+          description: Successfully joined group
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GroupResponse'
+        '400':
+          description: Invitation code missing
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: User not authenticated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Invalid invitation code
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: User already a member of the group
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /groups/{groupId}:
+    get:
+      summary: Get a specific group by ID
+      description: Retrieves a specific group by ID. The user must be a member of the group to access it.
+      tags:
+        - Groups
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: groupId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: objectId
+          description: The ID of the group to retrieve
+          example: "507f1f77bcf86cd799439012"
+      responses:
+        '200':
+          description: Group retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GroupResponse'
+        '400':
+          description: Group ID is required
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: User not authenticated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Access denied - user is not a member of this group
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Group not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse' 
