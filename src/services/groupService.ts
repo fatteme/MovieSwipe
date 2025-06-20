@@ -9,7 +9,7 @@ export interface CreateGroupData {
 export class GroupService {
   private generateInvitationCode(): string {
     const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-    const code = Array(8).map(() => chars.charAt(Math.floor(Math.random() * chars.length)));
+    const code = Array(8).fill(0).map(() => chars.charAt(Math.floor(Math.random() * chars.length)));
     return code.join('');
   }
 
@@ -20,7 +20,7 @@ export class GroupService {
         throw new Error('User not found');
       }
 
-      let invitationCode: string;
+      let invitationCode = '';
       let isUnique = false;
       let attempts = 0;
       const maxAttempts = 10;
@@ -33,14 +33,14 @@ export class GroupService {
         attempts++;
       }
 
-      if (!isUnique) {
+      if (!isUnique || !invitationCode) {
         throw new Error('Failed to generate unique invitation code');
       }
 
       const group = new Group({
         owner: data.ownerId,
         members: [data.ownerId],
-        invitationCode: invitationCode!
+        invitationCode: invitationCode
       });
 
       await group.save();
