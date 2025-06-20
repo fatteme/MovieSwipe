@@ -23,17 +23,24 @@ jobs:
           npm ci
           npm run build || echo "No build step"
 
+      - name: Copy .env file on VM
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.VM_HOST }}
+          username: ${{ secrets.VM_USERNAME }}
+          password: ${{ secrets.VM_PASSWORD }}
+          key: ${{ secrets.VM_SSH_KEY }}
+          script: cp ~/home/${{ secrets.VM_USERNAME }}/.env ~/home/${{ secrets.VM_USERNAME }}/movieswipe/.env
+
       - name: Copy files to VM
         uses: appleboy/scp-action@v0.1.7
         with:
           host: ${{ secrets.VM_HOST }}
           username: ${{ secrets.VM_USERNAME }}
+          password: ${{ secrets.VM_PASSWORD }}
           key: ${{ secrets.VM_SSH_KEY }}
           source: "."
-          port: ${{ secrets.PORT }}
-          mongodb_uri: ${{ secrets.MONGODB_URI }}
           target: ${{ secrets.VM_TARGET_PATH }}
-          script: cp ~/home/${{ secrets.VM_USERNAME }}/.env ~/home/${{ secrets.VM_USERNAME }}/movieswipe/.env
 
       - name: Restart app via SSH
         uses: appleboy/ssh-action@v1.0.3
