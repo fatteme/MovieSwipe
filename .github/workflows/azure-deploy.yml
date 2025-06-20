@@ -66,8 +66,7 @@ jobs:
         az deployment group create \
           --resource-group ${{ env.RESOURCE_GROUP }} \
           --template-file azure-deploy.json \
-          --parameters azure-deploy.parameters.json \
-          --output table
+          --parameters azure-deploy.parameters.json 
         echo "✅ Infrastructure deployed successfully"
 
   configure-app:
