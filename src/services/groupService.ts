@@ -9,6 +9,12 @@ export interface CreateGroupData {
 }
 
 export class GroupService {
+  private getGroup(groupId: string): Promise<IPopulatedGroup | null> {
+    return Group.findById(groupId)
+      .populate<{ owner: IUser }>('owner', 'name email')
+      .populate<{ members: IUser[] }>('members', 'name email');
+  }
+
   private generateInvitationCode(): string {
     const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
     const code = Array(8).fill(0).map(() => chars.charAt(Math.floor(Math.random() * chars.length)));
@@ -72,9 +78,7 @@ export class GroupService {
         throw new Error('Invalid group id');
       }
 
-      const group = await Group.findById(groupId)
-        .populate('owner', 'name email')
-        .populate('members', 'name email') as IPopulatedGroup | null;
+      const group = await this.getGroup(groupId);
 
       if (!group) {
         throw new Error('Group not found');
@@ -129,9 +133,7 @@ export class GroupService {
       group.members.push(userId);
       await group.save();
 
-      const populatedGroup = await Group.findById(group._id)
-        .populate<{ owner: IUser }>('owner', 'name email')
-        .populate<{ members: IUser[] }>('members', 'name email');
+      const populatedGroup = await this.getGroup(group._id.toString());
       
       if (!populatedGroup) {
         throw new Error('Failed to retrieve updated group');
@@ -152,29 +154,17 @@ export class GroupService {
         throw new Error('Group not found');
       }
 
-      // Check if user is a member of the group
       if (!group.members.includes(new mongoose.Types.ObjectId(userId))) {
         throw new Error('User is not a member of this group');
       }
 
-      // Validate that all genre IDs exist in the database
-      if (genreIds.length > 0) {
-        const genres = await Genre.find({ _id: { $in: genreIds } });
-        if (genres.length !== genreIds.length) {
-          throw new Error('Invalid genre IDs');
-        }
-      }
+      genreIds.forEach(id => {
+        group.preferences.set(id, [...(group.preferences.get(id) || []), new mongoose.Types.ObjectId(userId)]);
+      });
 
-      // Convert genre IDs to ObjectIds
-      const genreObjectIds = genreIds.map(id => new mongoose.Types.ObjectId(id));
-
-      // Update preferences for the user
-      group.preferences.set(userId, genreObjectIds);
       await group.save();
 
-      const populatedGroup = await Group.findById(group._id)
-        .populate<{ owner: IUser }>('owner', 'name email')
-        .populate<{ members: IUser[] }>('members', 'name email');
+      const populatedGroup = await this.getGroup(group._id.toString());
       
       if (!populatedGroup) {
         throw new Error('Failed to retrieve updated group');
@@ -184,41 +174,6 @@ export class GroupService {
       return populatedGroup;
     } catch (error) {
       logger.error('Error updating member preferences:', error);
-      throw error;
-    }
-  }
-
-  async getMemberPreferences(groupId: string, userId: string): Promise<{ [key: string]: any[] }> {
-    try {
-      const group = await Group.findById(groupId);
-      if (!group) {
-        throw new Error('Group not found');
-      }
-
-      // Check if user is a member of the group
-      if (!group.members.includes(new mongoose.Types.ObjectId(userId))) {
-        throw new Error('User is not a member of this group');
-      }
-
-      // Get all preferences with populated genres
-      const preferences: { [key: string]: any[] } = {};
-      
-      // Initialize preferences for all members (including those without preferences)
-      for (const memberId of group.members) {
-        const memberIdStr = memberId.toString();
-        const genreIds = group.preferences.get(memberIdStr);
-        
-        if (genreIds && genreIds.length > 0) {
-          const genres = await Genre.find({ _id: { $in: genreIds } }).select('_id name tmdbId');
-          preferences[memberIdStr] = genres;
-        } else {
-          preferences[memberIdStr] = [];
-        }
-      }
-
-      return preferences;
-    } catch (error) {
-      logger.error('Error getting member preferences:', error);
       throw error;
     }
   }

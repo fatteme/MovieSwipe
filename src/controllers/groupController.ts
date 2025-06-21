@@ -1,9 +1,8 @@
 import { Response } from 'express';
 import { groupService} from '../services/groupService';
 import { logger } from '../utils/logger';
-import { IGroup, IPopulatedGroup } from '../models';
+import { Genre, IGroup, IPopulatedGroup } from '../models';
 import { AuthenticatedRequest } from '../middleware/auth';
-import mongoose from 'mongoose';
 
 
 export interface CreateGroupRequest extends AuthenticatedRequest {
@@ -210,15 +209,20 @@ export const updateMemberPreferences = async (req: UpdatePreferencesRequest, res
       });
     }
 
-    // Validate that all genre IDs are valid ObjectIds
-    const validGenreIds = genreIds.filter(id => mongoose.Types.ObjectId.isValid(id));
-    if (validGenreIds.length !== genreIds.length) {
+    const areGenresValid = genreIds.some(id => {
+      const genre = Genre.findById(id);
+      if(!genre){
+        return false;
+      }
+      return true;
+    });
+    if (!areGenresValid) {
       return res.status(400).json({
         message: 'Invalid genre ID format'
       });
     }
 
-    const group = await groupService.updateMemberPreferences(groupId, userId.toString(), validGenreIds);
+    const group = await groupService.updateMemberPreferences(groupId, userId.toString(), genreIds);
 
     return res.status(200).json({
       message: 'Member preferences updated successfully',
@@ -244,53 +248,6 @@ export const updateMemberPreferences = async (req: UpdatePreferencesRequest, res
       if (error.message === 'Invalid genre IDs') {
         return res.status(400).json({
           message: 'One or more genre IDs are invalid'
-        });
-      }
-    }
-
-    return res.status(500).json({
-      message: 'Internal server error'
-    });
-  }
-};
-
-export const getMemberPreferences = async (req: AuthenticatedRequest, res: Response) => {
-  try {
-    const { groupId } = req.params;
-    const userId = req.user?._id;
-
-    if (!userId) {
-      return res.status(401).json({
-        message: 'User not authenticated'
-      });
-    }
-
-    if (!groupId) {
-      return res.status(400).json({
-        message: 'Group ID is required'
-      });
-    }
-
-    const preferences = await groupService.getMemberPreferences(groupId, userId.toString());
-
-    return res.status(200).json({
-      message: 'Member preferences retrieved successfully',
-      data: preferences
-    });
-
-  } catch (error) {
-    logger.error('Get member preferences error:', error);
-    
-    if (error instanceof Error) {
-      if (error.message === 'Group not found') {
-        return res.status(404).json({
-          message: 'Group not found'
-        });
-      }
-      
-      if (error.message === 'User is not a member of this group') {
-        return res.status(403).json({
-          message: 'You are not a member of this group'
         });
       }
     }

@@ -132,39 +132,4 @@ describe('Group Service', () => {
       )).rejects.toThrow('Invalid genre IDs');
     });
   });
-
-  describe('getMemberPreferences', () => {
-    it('should get member preferences successfully', async () => {
-      const group = await groupService.createGroup({ ownerId: testUser._id.toString() });
-      const genreIds = testGenres.map(genre => genre._id.toString());
-      
-      await groupService.updateMemberPreferences(
-        group._id.toString(),
-        testUser._id.toString(),
-        genreIds
-      );
-
-      const preferences = await groupService.getMemberPreferences(
-        group._id.toString(),
-        testUser._id.toString()
-      );
-
-      expect(preferences).toBeDefined();
-      expect(preferences[testUser._id.toString()]).toHaveLength(3);
-      expect(preferences[testUser._id.toString()]?.[0]).toHaveProperty('name');
-      expect(preferences[testUser._id.toString()]?.[0]).toHaveProperty('tmdbId');
-    });
-
-    it('should return empty preferences for members without preferences', async () => {
-      const group = await groupService.createGroup({ ownerId: testUser._id.toString() });
-
-      const preferences = await groupService.getMemberPreferences(
-        group._id.toString(),
-        testUser._id.toString()
-      );
-
-      expect(preferences).toBeDefined();
-      expect(preferences[testUser._id.toString()]).toHaveLength(0);
-    });
-  });
 }); 
